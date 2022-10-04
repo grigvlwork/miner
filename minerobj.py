@@ -17,6 +17,10 @@ class Cell:
             else:
                 return '.'
 
+    def __repr__(self):
+        return self.__str__()
+
+
     def open(self):
         if not self.is_opened:
             if self.bomb:
@@ -43,12 +47,26 @@ class Field(object):
     def __str__(self):
         rows = []
         for i in range(self.rows):
-            row = ""
+            if i == self.current_row and self.current_col == 0:
+                row = "["
+            else:
+                row = " "
             for j in range(self.cols):
+                row += str(self.field[i][j])
                 if i == self.current_row and j == self.current_col:
-                    row += "[" + str(self.field[i][j]) + "]"
+                     row += "]"
+                else:
+                    row += " "
+            if i == self.current_row and self.current_col == self.cols - 1:
+                row += "]"
+            else:
+                row += " "
             rows.append(row)
         return "\n".join(rows)
+
+    def __repr__(self):
+        return self.__str__()
+
 
 
 
