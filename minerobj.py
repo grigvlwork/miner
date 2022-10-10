@@ -14,6 +14,10 @@ class Cell:
                 return('?')
         else:
             if self.is_opened:
+                if self.bomb and self.flag:
+                    return 'X'
+                if self.bomb:
+                    return '*'
                 return str(self.bombs_around)
             else:
                 return '.'
@@ -40,13 +44,21 @@ class Field(object):
         self.rows = rows
         self.cols = cols
         self.bombs = bombs
-        self.field = [[Cell()] * self.cols for x in range(self.rows)]
+        self.field = []
+        for i in range(self.rows):
+            row = []
+            for j in range(self.cols):
+                c = Cell()
+                row.append(c)
+            self.field.append(row)
         self.current_row = 0
         self.current_col = 0
         self.first_move = True
         self.game_over = False
 
     def __str__(self):
+        if self.game_over:
+            self.open_all()
         rows = []
         for i in range(self.rows):
             if i == self.current_row and self.current_col == 0:
@@ -57,6 +69,8 @@ class Field(object):
                 row += str(self.field[i][j])
                 if i == self.current_row and j == self.current_col:
                      row += "]"
+                elif i == self.current_row and j == self.current_col - 1:
+                    row += "["
                 else:
                     row += " "
             if i == self.current_row and self.current_col == self.cols - 1:
@@ -80,7 +94,10 @@ class Field(object):
 
     def generate(self):
         self.first_move = False
-        coords = list(range(self.rows * self.cols)).remove(self.current_row * self.cols + self.current_col)
+        # coords = list(range(self.rows * self.cols)).remove(self.current_row * self.cols + self.current_col)
+        current = self.current_row * self.cols + self.current_col
+        coords = list(range(self.rows * self.cols))
+        coords.remove(current)
         bomb_coords = [choice(coords) for i in range(self.bombs)]
         for n in bomb_coords:
             row = n // self.cols
@@ -92,6 +109,8 @@ class Field(object):
                     self.field[i][j].bombs_around = self.count_bombs(i, j)
 
     def open(self):
+        if self.game_over:
+            return
         if self.first_move:
             self.generate()
         if self.field[self.current_row][self.current_col].bomb:
@@ -111,7 +130,10 @@ class Field(object):
                             if not self.field[row + i][col + j].is_opened:
                                 cells_to_open.append((row + i) * self.cols + col + j)
 
-
+    def open_all(self):
+        for i in range(self.rows):
+            for j in range(self.cols):
+                self.field[i][j].is_opened = True
 
 
 
