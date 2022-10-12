@@ -1,4 +1,7 @@
 from random import choice
+from colorama import Fore, Back, Style
+
+
 class Cell:
     def __init__(self, bomb=False, flag=0, is_opened=False):
         self.bomb = bomb
@@ -9,9 +12,9 @@ class Cell:
     def __str__(self):
         if self.flag > 0:
             if self.flag == 1:
-                return('P')
+                return ('P')
             else:
-                return('?')
+                return ('?')
         else:
             if self.is_opened:
                 if self.bomb and self.flag:
@@ -25,7 +28,6 @@ class Cell:
     def __repr__(self):
         return self.__str__()
 
-
     def open(self):
         if not self.is_opened:
             if self.bomb:
@@ -38,6 +40,7 @@ class Cell:
 
     def set_bomb(self):
         self.bomb = True
+
 
 class Field(object):
     def __init__(self, rows, cols, bombs):
@@ -56,6 +59,23 @@ class Field(object):
         self.first_move = True
         self.game_over = False
 
+    def change_flag(self):
+        if not self.field[self.current_row][self.current_col].is_opened:
+            self.field[self.current_row][self.current_col].flag = \
+                (self.field[self.current_row][self.current_col].flag + 1) % 3
+
+    def move_left(self):
+        self.current_col = (self.current_col - 1) % self.cols
+
+    def move_right(self):
+        self.current_col = (self.current_col + 1) % self.cols
+
+    def move_up(self):
+        self.current_row = (self.current_row - 1) % self.rows
+
+    def move_down(self):
+        self.current_row = (self.current_row + 1) % self.rows
+
     def __str__(self):
         if self.game_over:
             self.open_all()
@@ -68,7 +88,7 @@ class Field(object):
             for j in range(self.cols):
                 row += str(self.field[i][j])
                 if i == self.current_row and j == self.current_col:
-                     row += "]"
+                    row += "]"
                 elif i == self.current_row and j == self.current_col - 1:
                     row += "["
                 else:
@@ -108,6 +128,37 @@ class Field(object):
                 if not self.field[i][j].bomb:
                     self.field[i][j].bombs_around = self.count_bombs(i, j)
 
+    def draw(self):
+        for c in self.__str__():
+            if c == "1":
+                print(Fore.LIGHTBLUE_EX + c, end="")
+            elif c == "2":
+                print(Fore.LIGHTGREEN_EX + c, end="")
+            elif c == "3":
+                print(Fore.LIGHTRED_EX + c, end="")
+            elif c == "4":
+                print(Fore.BLUE + c, end="")
+            elif c == "5":
+                print(Fore.RED + c, end="")
+            elif c == "6":
+                print(Fore.LIGHTMAGENTA_EX + c, end="")
+            elif c == "7":
+                print(Fore.GREEN + c, end="")
+            elif c == "8":
+                print(Fore.MAGENTA + c, end="")
+            elif c == "P":
+                print(Fore.GREEN + Back.LIGHTRED_EX + c, end="")
+            elif c == ".":
+                print(Fore.WHITE + c, end="")
+            elif c == "*":
+                print(Fore.BLACK + Back.LIGHTRED_EX + c, end="")
+            elif c == "X":
+                print(Fore.YELLOW + Back.LIGHTRED_EX + c, end="")
+            else:
+                print(c, end="")
+            print(Style.RESET_ALL, end="")
+        print()
+
     def open(self):
         if self.game_over:
             return
@@ -115,6 +166,8 @@ class Field(object):
             self.generate()
         if self.field[self.current_row][self.current_col].bomb:
             self.game_over = True
+            self.open_all()
+            return
         if self.field[self.current_row][self.current_col].is_opened:
             return
         cells_to_open = [self.current_row * self.cols + self.current_col]
@@ -134,13 +187,3 @@ class Field(object):
         for i in range(self.rows):
             for j in range(self.cols):
                 self.field[i][j].is_opened = True
-
-
-
-
-
-
-
-
-
-
