@@ -21,7 +21,10 @@ class Cell:
                     return 'X'
                 if self.bomb:
                     return '*'
-                return str(self.bombs_around)
+                if self.bombs_around == 0:
+                    return "-"
+                else:
+                    return str(self.bombs_around)
             else:
                 return '.'
 
@@ -132,6 +135,8 @@ class Field(object):
         for c in self.__str__():
             if c == "1":
                 print(Fore.LIGHTBLUE_EX + c, end="")
+            elif c == "-":
+                print(Back.LIGHTBLACK_EX + c, end="")
             elif c == "2":
                 print(Fore.LIGHTGREEN_EX + c, end="")
             elif c == "3":
@@ -158,6 +163,47 @@ class Field(object):
                 print(c, end="")
             print(Style.RESET_ALL, end="")
         print()
+
+    def amount_marked_bombs(self, row, col):
+        counter = 0
+        for i in [-1, 0, 1]:
+            for j in [-1, 0, 1]:
+                if row + i in range(self.rows) and col + j in range(self.cols) and not (i == j == 0):
+                    if self.field[row + i][col + j].flag == 1:
+                        counter += 1
+        return counter
+
+    def accord(self):
+        if self.field[self.current_row][self.current_col].is_opened and \
+                self.field[self.current_row][self.current_col].bombs_around == \
+                self.amount_marked_bombs(self.current_row, self.current_col):
+            row = self.current_row
+            col = self.current_col
+            for i in [-1, 0, 1]:
+                for j in [-1, 0, 1]:
+                    if row + i in range(self.rows) and col + j in range(self.cols) and not (i == j == 0):
+                        if not self.field[row + i][col + j].is_opened:
+                            self.open_cell(row + i, row + j)
+
+    def open_cell(self, row, col):
+        if self.field[row][col].bomb:
+            self.game_over = True
+            self.open_all()
+            return
+        if self.field[row][col].is_opened:
+            return
+        cells_to_open = [row * self.cols + col]
+        while len(cells_to_open) > 0:
+            n = cells_to_open.pop(0)
+            row = n // self.cols
+            col = n % self.cols
+            self.field[row][col].is_opened = True
+            if self.field[row][col].bombs_around == 0:
+                for i in [-1, 0, 1]:
+                    for j in [-1, 0, 1]:
+                        if row + i in range(self.rows) and col + j in range(self.cols) and not (i == j == 0):
+                            if not self.field[row + i][col + j].is_opened:
+                                cells_to_open.append((row + i) * self.cols + col + j)
 
     def open(self):
         if self.game_over:
