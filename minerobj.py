@@ -1,5 +1,7 @@
 from random import choice
-from colorama import Fore, Back, Style
+from colorama import init, Fore, Back, Style
+
+init()
 
 
 class Cell:
