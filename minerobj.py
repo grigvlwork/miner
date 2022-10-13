@@ -4,6 +4,16 @@ from colorama import init, Fore, Back, Style
 init()
 
 
+def flush_input():
+    try:
+        import msvcrt
+        while msvcrt.kbhit():
+            msvcrt.getch()
+    except ImportError:
+        import sys, termios  # for linux/unix
+        termios.tcflush(sys.stdin, termios.TCIOFLUSH)
+
+
 class Cell:
     def __init__(self, bomb=False, flag=0, is_opened=False):
         self.bomb = bomb
@@ -63,6 +73,10 @@ class Field(object):
         self.current_col = 0
         self.first_move = True
         self.game_over = False
+
+    def normal_quit(self):
+        flush_input()
+        exit(0)
 
     def change_flag(self):
         if not self.field[self.current_row][self.current_col].is_opened:
@@ -137,6 +151,13 @@ class Field(object):
                     self.field[i][j].bombs_around = self.count_bombs(i, j)
 
     def draw(self):
+        marked = 0
+        for i in range(self.rows):
+            for j in range(self.cols):
+                if self.field[i][j].flag == 1:
+                    marked += 1
+        print()
+        print(f"Мин осталось: {self.bombs - marked}")
         for c in self.__str__():
             if c == "1":
                 print(Fore.LIGHTBLUE_EX + c, end="")
@@ -207,8 +228,11 @@ class Field(object):
     def open_cell(self, row, col):
         if self.field[row][col].bomb:
             self.game_over = True
+            print("Вы проиграли.")
             self.open_all()
-            return
+            print("Сыграем еще раз?")
+            flush_input()
+            self.new_game()
         if self.field[row][col].is_opened:
             return
         cells_to_open = [row * self.cols + col]
@@ -231,7 +255,11 @@ class Field(object):
             self.generate()
         if self.field[self.current_row][self.current_col].bomb:
             self.game_over = True
+            print("Вы проиграли.")
             self.open_all()
+            print("Сыграем еще раз?")
+            flush_input()
+            self.new_game()
             return
         if self.field[self.current_row][self.current_col].is_opened:
             return
@@ -249,6 +277,7 @@ class Field(object):
                                 cells_to_open.append((row + i) * self.cols + col + j)
         if self.check_win():
             print("Поздравляю, вы выиграли! Сыграете еще раз?")
+            flush_input()
             self.new_game()
 
     def new_game(self):
@@ -278,7 +307,7 @@ class Field(object):
                 except:
                     self.rows = self.cols = self.bombs = -1
         elif choice == "5":
-            exit(0)
+            self.normal_quit()
         self.field = []
         for i in range(self.rows):
             row = []
@@ -290,7 +319,6 @@ class Field(object):
         self.current_col = 0
         self.first_move = True
         self.game_over = False
-
 
     def open_all(self):
         for i in range(self.rows):
