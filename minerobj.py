@@ -46,7 +46,7 @@ class Cell:
 
 
 class Field(object):
-    def __init__(self, rows, cols, bombs):
+    def __init__(self, rows=-1, cols=-1, bombs=-1):
         self.rows = rows
         self.cols = cols
         self.bombs = bombs
@@ -66,6 +66,9 @@ class Field(object):
         if not self.field[self.current_row][self.current_col].is_opened:
             self.field[self.current_row][self.current_col].flag = \
                 (self.field[self.current_row][self.current_col].flag + 1) % 3
+        if self.check_win():
+            print("Поздравляю, вы выиграли! Сыграете еще раз?")
+            self.new_game()
 
     def move_left(self):
         self.current_col = (self.current_col - 1) % self.cols
@@ -96,7 +99,7 @@ class Field(object):
                     row += "["
                 else:
                     row += " "
-            if i == self.current_row and self.current_col == self.cols - 1:
+            if i == self.current_row and self.current_col == self.cols - 1 and row[-1] != ']':
                 row += "]"
             else:
                 row += " "
@@ -185,6 +188,20 @@ class Field(object):
                         if not self.field[row + i][col + j].is_opened:
                             self.open_cell(row + i, row + j)
 
+    def check_win(self):
+        opened = 0
+        right_marked = 0
+        for i in range(self.rows):
+            for j in range(self.cols):
+                if self.field[i][j].is_opened:
+                    opened += 1
+                if self.field[i][j].bomb and self.field[i][j].flag == 1:
+                    right_marked += 1
+        if right_marked + opened == self.rows * self.cols:
+            return True
+        else:
+            return False
+
     def open_cell(self, row, col):
         if self.field[row][col].bomb:
             self.game_over = True
@@ -228,6 +245,50 @@ class Field(object):
                         if row + i in range(self.rows) and col + j in range(self.cols) and not (i == j == 0):
                             if not self.field[row + i][col + j].is_opened:
                                 cells_to_open.append((row + i) * self.cols + col + j)
+        if self.check_win():
+            print("Поздравляю, вы выиграли! Сыграете еще раз?")
+            self.new_game()
+
+    def new_game(self):
+        choice = -1
+        while choice not in ["1", "2", "3", "4", "5"]:
+            print("Выберите уровень сложности:")
+            print("1) Новичок 10 мин поле 9х9")
+            print("2) Любитель 40 мин поле 16х16")
+            print("3) Профессионал 99 мин поле 16х30")
+            print("4) Настроить поле")
+            print("5) Выход")
+            choice = input("Введите номер пункта:")
+        rows = cols = 9
+        bombs = 10
+        if choice == "1":
+            self.rows, self.cols, self.bombs = 9, 9, 10
+        elif choice == "2":
+            self.rows, self.cols, self.bombs = 16, 16, 40
+        elif choice == "3":
+            self.rows, self.cols, self.bombs = 16, 30, 99
+        elif choice == "4":
+            while rows not in range(2, 41) or cols not in range(2, 41) or bombs not in range(rows * cols):
+                try:
+                    self.rows = int(input("Количество строк (2..40):"))
+                    self.cols = int(input("Количество столбцов (2..40):"))
+                    self.bombs = int(input(f"Количество мин (1..{self.rows * self.cols - 1}):"))
+                except:
+                    self.rows = self.cols = self.bombs = -1
+        elif choice == "5":
+            exit(0)
+        self.field = []
+        for i in range(self.rows):
+            row = []
+            for j in range(self.cols):
+                c = Cell()
+                row.append(c)
+            self.field.append(row)
+        self.current_row = 0
+        self.current_col = 0
+        self.first_move = True
+        self.game_over = False
+
 
     def open_all(self):
         for i in range(self.rows):
