@@ -9,6 +9,7 @@ def flush_input():
         import msvcrt
         while msvcrt.kbhit():
             msvcrt.getch()
+            print("111")
     except ImportError:
         import sys, termios  # for linux/unix
         termios.tcflush(sys.stdin, termios.TCIOFLUSH)
@@ -208,7 +209,7 @@ class Field(object):
             for i in [-1, 0, 1]:
                 for j in [-1, 0, 1]:
                     if row + i in range(self.rows) and col + j in range(self.cols) and not (i == j == 0):
-                        if not self.field[row + i][col + j].is_opened:
+                        if not self.field[row + i][col + j].is_opened and self.field[row + i][col + j].flag == 0:
                             self.open_cell(row + i, row + j)
 
     def check_win(self):
@@ -230,6 +231,7 @@ class Field(object):
             self.game_over = True
             print("Вы проиграли.")
             self.open_all()
+            self.draw()
             print("Сыграем еще раз?")
             flush_input()
             self.new_game()
